@@ -1,0 +1,25 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    io-console (0.5.11)
+    language_server-protocol (3.17.0.2)
+    prettier_print (1.1.0)
+    reline (0.3.1)
+      io-console (~> 0.5)
+    ruby-lsp (0.3.6)
+      language_server-protocol (~> 3.17.0)
+      sorbet-runtime
+      syntax_tree (>= 4.0.2, < 5.0.0)
+    sorbet-runtime (0.5.10564)
+    syntax_tree (4.3.0)
+      prettier_print (>= 1.0.2)
+
+PLATFORMS
+  arm64-darwin-21
+
+DEPENDENCIES
+  reline
+  ruby-lsp
+
+BUNDLED WITH
+   2.3.24
