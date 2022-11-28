@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+program, break_file, break_line = ARGV
+
+Kernel.exec({ "RUBYOPT" => "-Ilib -rdebugger" }, "ruby", program)
