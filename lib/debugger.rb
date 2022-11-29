@@ -7,6 +7,9 @@ module Debugger
       display_code(binding)
       while input = Reline.readline("(debug) ")
         case input
+        when "s", "step"
+          step_in
+          break
         when "c", "continue"
           break
         when "exit"
@@ -14,6 +17,13 @@ module Debugger
         else
           puts "=> " + eval_input(binding, input).inspect
         end
+      end
+    end
+
+    def step_in
+      TracePoint.trace(:line) do |tp|
+        tp.disable
+        suspend(tp.binding)
       end
     end
 
