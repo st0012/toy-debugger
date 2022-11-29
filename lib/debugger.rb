@@ -71,7 +71,15 @@ module Debugger
   end
 end
 
-Debugger::LineBreakpoint.new(
-  ENV["DEBUGGEE_FILE"],
-  ENV["DEBUGGEE_LINE"].to_i
-).enable
+class Binding
+  def debug
+    Debugger::SESSION.suspend(self)
+  end
+end
+
+if ENV["RUBYOPT"] && ENV["RUBYOPT"].split.include?("-rdebugger")
+  Debugger::LineBreakpoint.new(
+    ENV["DEBUGGEE_FILE"],
+    ENV["DEBUGGEE_LINE"].to_i
+  ).enable
+end
