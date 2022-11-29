@@ -6,7 +6,17 @@ module Debugger
     def suspend(binding)
       display_code(binding)
       while input = Reline.readline("(debug) ")
-        case input
+        cmd, arg = input.split(" ", 2)
+        case cmd
+        when "break"
+          case arg
+          when /\A(\d+)\z/
+            LineBreakpoint.new(binding.source_location[0], $1.to_i).enable
+          when /\A(.+)[:\s+](\d+)\z/
+            LineBreakpoint.new($1, $2.to_i).enable
+          else
+            puts "Unknown break format: #{arg}"
+          end
         when "s", "step"
           step_in
           break
@@ -104,8 +114,5 @@ class Binding
 end
 
 if ENV["RUBYOPT"] && ENV["RUBYOPT"].split.include?("-rdebugger")
-  Debugger::LineBreakpoint.new(
-    ENV["DEBUGGEE_FILE"],
-    ENV["DEBUGGEE_LINE"].to_i
-  ).enable
+  Debugger::LineBreakpoint.new($0, 1).enable
 end
