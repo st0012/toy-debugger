@@ -7,8 +7,14 @@ module Debugger
       @breakpoints = []
     end
 
-    def suspend(binding)
+    def suspend(binding, bp: nil)
+      if bp
+        puts "Suspended by: #{bp.name}"
+        @breakpoints.delete(bp) if bp.oneshot
+      end
+
       display_code(binding)
+
       while input = Reline.readline("(debug) ")
         cmd, arg = input.split(" ", 2)
         case cmd
@@ -54,8 +60,8 @@ module Debugger
       end
     end
 
-    def add_breakpoint(file, line)
-      bp = LineBreakpoint.new(file, line)
+    def add_breakpoint(file, line, **options)
+      bp = LineBreakpoint.new(file, line, **options)
       @breakpoints << bp
       bp.enable
     end
@@ -111,16 +117,18 @@ module Debugger
 
   SESSION = Session.new
   class LineBreakpoint
-    def initialize(file, line)
+    attr_reader :oneshot
+
+    def initialize(file, line, oneshot: false)
       @file = file
       @line = line
+      @oneshot = oneshot
       @tp =
         TracePoint.new(:line) do |tp|
           # we need to expand paths to make sure they'll match
           if File.expand_path(tp.path) == File.expand_path(@file) &&
                tp.lineno == @line
-            puts "#{name} is triggered"
-            SESSION.suspend(tp.binding)
+            SESSION.suspend(tp.binding, bp: self)
           end
         end
     end
@@ -151,5 +159,5 @@ class Binding
 end
 
 if ENV["RUBYOPT"] && ENV["RUBYOPT"].split.include?("-rdebugger")
-  Debugger::SESSION.add_breakpoint($0, 1)
+  Debugger::SESSION.add_breakpoint($0, 1, oneshot: true)
 end
