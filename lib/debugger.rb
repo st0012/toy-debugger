@@ -3,6 +3,10 @@ puts "Debugger is loaded"
 
 module Debugger
   class Session
+    def initialize
+      @breakpoints = []
+    end
+
     def suspend(binding)
       display_code(binding)
       while input = Reline.readline("(debug) ")
@@ -11,11 +15,28 @@ module Debugger
         when "break"
           case arg
           when /\A(\d+)\z/
-            LineBreakpoint.new(binding.source_location[0], $1.to_i).enable
+            add_breakpoint(binding.source_location[0], $1.to_i)
           when /\A(.+)[:\s+](\d+)\z/
-            LineBreakpoint.new($1, $2.to_i).enable
+            add_breakpoint($1, $2.to_i)
+          when nil
+            if @breakpoints.empty?
+              puts "No breakpoints"
+            else
+              @breakpoints.each_with_index do |bp, index|
+                puts "##{index} - #{bp.location}"
+              end
+            end
           else
             puts "Unknown break format: #{arg}"
+          end
+        when "delete"
+          index = arg.to_i
+
+          if bp = @breakpoints.delete_at(index)
+            bp.disable
+            puts "Breakpoint ##{index} (#{bp.location}) has been deleted"
+          else
+            puts "Breakpoint ##{index} not found"
           end
         when "s", "step"
           step_in
@@ -32,6 +53,14 @@ module Debugger
         end
       end
     end
+
+    def add_breakpoint(file, line)
+      bp = LineBreakpoint.new(file, line)
+      @breakpoints << bp
+      bp.enable
+    end
+
+    private
 
     def step_in
       TracePoint.trace(:line) do |tp|
@@ -96,13 +125,21 @@ module Debugger
         end
     end
 
+    def location
+      "#{@file}:#{@line}"
+    end
+
     def name
-      "Breakpoint at #{@file}:#{@line}"
+      "Breakpoint at #{location}"
     end
 
     def enable
       puts "#{name} is activated"
       @tp.enable
+    end
+
+    def disable
+      @tp.disable
     end
   end
 end
@@ -114,5 +151,5 @@ class Binding
 end
 
 if ENV["RUBYOPT"] && ENV["RUBYOPT"].split.include?("-rdebugger")
-  Debugger::LineBreakpoint.new($0, 1).enable
+  Debugger::SESSION.add_breakpoint($0, 1)
 end
