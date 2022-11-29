@@ -71,6 +71,12 @@ module Debugger
   end
 end
 
+class Binding
+  def debug
+    Debugger::SESSION.suspend(self)
+  end
+end
+
 Debugger::LineBreakpoint.new(
   ENV["DEBUGGEE_FILE"],
   ENV["DEBUGGEE_LINE"].to_i
