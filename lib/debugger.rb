@@ -10,6 +10,9 @@ module Debugger
         when "s", "step"
           step_in
           break
+        when "n", "next"
+          step_over
+          break
         when "c", "continue"
           break
         when "exit"
@@ -22,6 +25,19 @@ module Debugger
 
     def step_in
       TracePoint.trace(:line) do |tp|
+        tp.disable
+        suspend(tp.binding)
+      end
+    end
+
+    def step_over
+      current_depth = caller.length - 2
+
+      TracePoint.trace(:line) do |tp|
+        depth = caller.length
+
+        next unless depth <= current_depth
+
         tp.disable
         suspend(tp.binding)
       end
