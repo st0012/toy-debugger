@@ -2,4 +2,12 @@
 
 program, break_file, break_line = ARGV
 
-Kernel.exec({ "RUBYOPT" => "-Ilib -rdebugger" }, "ruby", program)
+Kernel.exec(
+  {
+    "RUBYOPT" => "-Ilib -rdebugger",
+    "DEBUGGEE_FILE" => break_file || program,
+    "DEBUGGEE_LINE" => break_line || "1"
+  },
+  "ruby",
+  program
+)
