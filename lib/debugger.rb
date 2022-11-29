@@ -4,6 +4,7 @@ puts "Debugger is loaded"
 module Debugger
   class Session
     def suspend(binding)
+      display_code(binding)
       while input = Reline.readline("(debug) ")
         case input
         when "c", "continue"
@@ -12,6 +13,26 @@ module Debugger
           exit
         else
           puts "=> " + eval_input(binding, input).inspect
+        end
+      end
+    end
+
+    def display_code(binding)
+      file, current_line = binding.source_location
+
+      if File.exist?(file)
+        lines = File.readlines(file)
+        end_line = [current_line + 5, lines.count].min - 1
+        start_line = [end_line - 10, 0].max
+        puts "[#{start_line + 1}, #{end_line + 1}] in #{file}"
+        lines[start_line..end_line].each_with_index do |line, index|
+          lineno = start_line + index + 1
+
+          if lineno == current_line
+            puts " => #{lineno}| #{line}"
+          else
+            puts "    #{lineno}| #{line}"
+          end
         end
       end
     end
